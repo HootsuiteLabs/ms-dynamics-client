@@ -7,7 +7,6 @@ Gem::Specification.new do |s|
   s.authors     = ["Rei Colina"]
   s.email       = 'reinaldo13+github@gmail.com'
   s.files       = ["lib/msdynamics.rb"]
-  s.homepage    =
-    'https://github.com/HootsuiteLabs/ms-dynamics-client'
-  s.license       = 'MIT'
+  s.homepage    = 'https://github.com/HootsuiteLabs/ms-dynamics-client'
+  s.license     = 'MIT'
 end
