@@ -51,8 +51,8 @@ class MSDynamics
       request = Net::HTTP::Get.new(url)
       request["Authorization"] = "Bearer #{@access_token}"
       response = http.request(request)
-      # Return an object that represents the response
-      Hashie::Mash.new(JSON.parse(response.body))
+      # Return the array of records
+      Hashie::Mash.new(JSON.parse(response.body)).value
   end
 
 end

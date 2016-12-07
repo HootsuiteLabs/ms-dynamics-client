@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'msdynamics'
-  s.version     = '0.1.3'
+  s.version     = '0.2.1'
   s.date        = '2016-12-01'
   s.summary     = "MS Dynamics Client"
   s.description = "Ruby library for accessing Microsoft Dynamics 365 and 2016 via the Microsoft Web API."
