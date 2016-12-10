@@ -9,15 +9,20 @@ class MSDynamics
   # Public: Initialize a MS Dynamics client instance.
   #
   # config - A configuration object.
-  def initialize(config={hostname: nil, access_token: nil})
+  def initialize(config={
+      hostname: nil, access_token: nil, refresh_token: nil,
+      client_id: nil, client_secret: nil})
     # Validate the input.
     if config[:hostname].nil?  && config[:access_token].nil?
       raise RuntimeError.new("hostname and access_token are required")
     end
     # Set up the variables
     @access_token = config[:access_token]
+    @refresh_token = config[:refresh_token]
     @hostname = config[:hostname]
-    @endpoint = "https://#{@hostname}/api/data/v8.0/"
+    @client_id = config[:client_id]
+    @client_secret = config[:client_secret]
+    @endpoint = "#{@hostname}/api/data/v8.0/"
   end
 
   # Public: Gets all the records for a given MS Dynamics entity.
@@ -27,9 +32,7 @@ class MSDynamics
   # Examples
   #
   #   get_entity_records('accounts')
-  #   # => {
-  #        "@odata.context": "---",
-  #        "value": [
+  #   # => [
   #          {
   #            "@odata.etag": "W/\"640532\"",
   #            "name": "A. Datum",
@@ -40,19 +43,49 @@ class MSDynamics
   #            "accountid": "475b158c-541c-e511-80d3-3863bb347ba8"
   #          }
   #        ]
-  #   }
   #
   # Returns an object with all records for the given entity.
   def get_entity_records(entity_name="")
-      # Returns all records that belong to a specific entity.
-      url = URI("#{@endpoint}#{entity_name}")
-      http = Net::HTTP.new(url.host, url.port)
-      http.use_ssl = true
-      request = Net::HTTP::Get.new(url)
-      request["Authorization"] = "Bearer #{@access_token}"
-      response = http.request(request)
-      # Return the array of records
-      Hashie::Mash.new(JSON.parse(response.body)).value
+    # Return the array of records
+    response = DynamicsHTTPClient.request("#{@endpoint}#{entity_name}", @access_token)
+    Hashie::Mash.new(JSON.parse(response.body)).value
   end
 
+  def refresh_token()
+    response = DynamicsHTTPClient.refresh_token(
+      "https://login.windows.net/common/oauth2/token", @refresh_token,
+      @client_id, @client_secret, @hostname)
+    token_object = Hashie::Mash.new(JSON.parse(response.body))
+    @access_token = token_object.access_token
+    @refresh_token = token_object.refresh_token
+    token_object
+  end
+
+end
+
+# Private: Methods for making HTTP requests to the Dynamics Web API.
+class DynamicsHTTPClient
+  # Sends a HTTP request.(GET)
+  def self.request(url="", access_token="")
+      uri = URI(url)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = (uri.scheme == "https")
+      request = Net::HTTP::Get.new(uri)
+      request["Authorization"] = "Bearer #{access_token}"
+      http.request(request)
+  end
+
+  # Allows refreshing an oAuth access token.
+  def self.refresh_token(url="", refresh_token="",
+                         client_id="", client_secret="", resource="")
+    params = {
+      'refresh_token' => refresh_token,
+      'client_id'     => client_id,
+      'client_secret' => client_secret,
+      'grant_type'    => 'refresh_token',
+      'resource'      => resource
+    }
+    uri = URI(url)
+    Net::HTTP::post_form(uri, params)
+  end
 end
