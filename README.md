@@ -17,17 +17,34 @@ Or install it yourself as:
 
 ## Usage
 
-
 #### Access token authentication
 
+To obtain the initial access and refresh tokens you can use [OmniAuth](https://github.com/omniauth/omniauth) in combination with [OmniAuth Azure](https://github.com/KonaTeam/omniauth-azure-oauth2)
 ```ruby
-client = MSDynamics.new({hostname: "test.crm3.dynamics.com", access_token: "djhksjdhu3ye83y"})
+client = MSDynamics.new({
+    hostname: "test.crm3.dynamics.com",
+    access_token: "djhksjdhu3ye83y",
+    refresh_token: "djhksjdhu3ye83y",
+    client_id: "absjkdh3ewrwr",
+    client_secret: "djskdhak82u3kjhk"
+})
 ```
 
-### Retrieve
+### Retrieving entity records
 
+Entity types are: `accounts`, `contacts`, `leads` and `opportunities`
 ```ruby
 records = client.get_entity_records('accounts')
+```
+
+### Modifying or creating entity records
+
+Modifying or creating entity records is currently not supported by this library. Pull or feature requests are welcome!
+
+### OAuth Token Refresh
+
+```ruby
+new_token_object = client.refresh_token
 ```
 
 ## Contributing
