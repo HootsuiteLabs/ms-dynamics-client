@@ -22,7 +22,7 @@ Or install it yourself as:
 To obtain the initial access and refresh tokens you can use [OmniAuth](https://github.com/omniauth/omniauth) in combination with [OmniAuth Azure](https://github.com/KonaTeam/omniauth-azure-oauth2)
 ```ruby
 client = MSDynamics.new({
-    hostname: "test.crm3.dynamics.com",
+    hostname: "https://test.crm3.dynamics.com",
     access_token: "djhksjdhu3ye83y",
     refresh_token: "djhksjdhu3ye83y",
     client_id: "absjkdh3ewrwr",
@@ -34,7 +34,10 @@ client = MSDynamics.new({
 
 Entity types are: `accounts`, `contacts`, `leads` and `opportunities`
 ```ruby
-records = client.get_entity_records('accounts')
+accounts = client.get_entity_records('accounts')
+contacts = client.get_entity_records('contacts')
+leads = client.get_entity_records('leads')
+opportunities = client.get_entity_records('opportunities')
 ```
 
 ### Modifying or creating entity records
