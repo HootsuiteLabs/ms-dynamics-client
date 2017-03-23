@@ -23,6 +23,11 @@ class MSDynamics
     @client_id = config[:client_id]
     @client_secret = config[:client_secret]
     @endpoint = "#{@hostname}/api/data/v8.0/"
+    # Get the authenticated user's information ('WhoAmI')
+    # This also validates the access tokens and client secrets.
+    # If validation fails, it will raise an exception back to the calling app.
+    response = DynamicsHTTPClient.request("#{@endpoint}WhoAmI", @access_token)
+    @user_id = JSON.parse(response.body)['UserId']
   end
 
   # Public: Gets all the records for a given MS Dynamics entity.
@@ -46,8 +51,11 @@ class MSDynamics
   #
   # Returns an object with all records for the given entity.
   def get_entity_records(entity_name="")
+    # Add a filter so we only get records that belong to the authenticated user.
+    filter = "_ownerid_value eq (#{@user_id})"
+    request_url = "#{@endpoint}#{entity_name}?$filter=#{filter}"
     # Return the array of records
-    response = DynamicsHTTPClient.request("#{@endpoint}#{entity_name}", @access_token)
+    response = DynamicsHTTPClient.request(request_url, @access_token)
     Hashie::Mash.new(JSON.parse(response.body)).value
   end
 
@@ -67,12 +75,22 @@ end
 class DynamicsHTTPClient
   # Sends a HTTP request.(GET)
   def self.request(url="", access_token="")
-      uri = URI(url)
+      uri = URI(URI.encode(url))
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = (uri.scheme == "https")
       request = Net::HTTP::Get.new(uri)
       request["Authorization"] = "Bearer #{access_token}"
-      http.request(request)
+      response = http.request(request)
+      if response.code != '200'
+        if response.code == '401'
+          # Ughhh! MS Dynamics puts the 401 error messages in the body!
+          error_message = response.body
+        else
+          error_message = JSON.parse(response.body)['error']['message']
+        end
+        raise RuntimeError.new(error_message)
+      end
+      response
   end
 
   # Allows refreshing an oAuth access token.
